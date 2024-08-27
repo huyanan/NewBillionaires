@@ -2,7 +2,9 @@
 function flipCoin() {
   // 每次根据当前时间设置随机数种子
   // Math.seedrandom(Date.now());
-  return Math.random() < 0.5 ? '正面' : '反面';
+  const num = Math.random();
+  console.log(num);
+  return num < 0.5 ? '正面' : '反面';
 }
 // 每局抛N次硬币
 function playGame(N) {
@@ -32,7 +34,7 @@ function playGames() {
   return loseCount;
 }
 
-console.log(playGames());
+// console.log(playGames());
 
 
 
