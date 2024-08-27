@@ -19,12 +19,12 @@ function playGame(N) {
   // console.log(`正面: ${headsCount}, 反面: ${tailsCount}`);
   return headsCount > 0 ? '赢' : '输';
 }
-// 玩1000局游戏，统计全输的次数
-function play1000Games() {
+// 玩游戏，统计全输的次数
+function playGames() {
   
   let loseCount = 0;
-  for (let i = 0; i < 10000; i++) {
-    const result = playGame(11);
+  for (let i = 0; i < 10000000; i++) {
+    const result = playGame(15);
     if (result === '输') {
       loseCount++;
     }
@@ -32,7 +32,7 @@ function play1000Games() {
   return loseCount;
 }
 
-// console.log(play1000Games());
+console.log(playGames());
 
 
 
