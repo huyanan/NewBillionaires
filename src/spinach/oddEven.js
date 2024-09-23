@@ -30,7 +30,7 @@ function csgoOddEvent () {
 // }
 console.log('篮球 lol dota' , getBalanceOddEven());
 console.log('csgo 倍率计算', csgoOddEvent())
-// console.log('csgo 抽样计算', csgoOddEvent2())
+// console.log('csgo 抽样计算', csgoOddEvent2())     
 
 
 // 0,1,2,3,4,5,6,7,8,9
