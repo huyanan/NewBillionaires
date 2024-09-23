@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background: #333;
+        }
+        button {
+            width: 500px;
+            height: 100px;
+        }
+        #res {
+            font-size: 500px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <button id="btn">庄闲</button>
+    <div id="res"></div>
+    <script>
+        window.onload = function () {
+            const btn = document.getElementById('btn');
+            btn.onclick = function () {
+                document.getElementById('res').innerHTML = winLoss();
+            }
+        }
+        function winLoss() {
+            const num = Math.random().toString().split('.')[1][0] % 2 
+            const res = num === 0 ? '庄' : '闲'
+            console.log(num,res);
+            return res
+        }
+    </script>
+</body>
+</html>

@@ -15,7 +15,10 @@
  * 
  * 
  */
-
+ function winLoss() {
+    
+    return Math.random().toString().split('.')[1][0] % 2 === 0 ? '主' : '客'
+}
 // 随机获取单双数, 通过小数点第一位判断
 function getBalanceOddEven() {
     return Math.random().toString().split('.')[1][0] % 2 === 0 ? '双' : '单'
@@ -28,6 +31,7 @@ function csgoOddEvent () {
 // function csgoOddEvent2 () {
 //     return Math.random() <= 0.687 ? '双' : '单'
 // }
+console.log('输赢', winLoss());
 console.log('篮球 lol dota' , getBalanceOddEven());
 console.log('csgo 倍率计算', csgoOddEvent())
 // console.log('csgo 抽样计算', csgoOddEvent2())     

@@ -8,11 +8,13 @@
  * 赢到1
  */
 function simulateBaccarat() {
-  let playerFunds = 100000;  // 初始本金
-  const targetFunds = 1000000;  // 目标金额
+  let playerFunds = 6000;  // 初始本金
+  const targetFunds = 7000;  // 目标金额
   let betAmount = 20;  // 初始下注金额
   const baseBet = 20;  // 基础下注金额
-  const maxBet = 50000;  // 最大下注金额
+  const maxBet = 3000;  // 最大下注金额
+  // 加注倍率
+  const doublingRate = 2;
   let rounds = 0;  // 游戏轮数
   let betHistory = [];  // 记录下注金额和输赢情况
 
@@ -41,7 +43,7 @@ function simulateBaccarat() {
       if (outcome < bankerWinRate) {
           // 庄家赢
           if (isBetOnBanker) {
-              playerFunds += betAmount * 1.95;
+              playerFunds += betAmount * 0.95;
               betHistory[betHistory.length - 1].result = 'Win';
           } else {
               playerFunds -= betAmount;
@@ -53,7 +55,7 @@ function simulateBaccarat() {
       } else {
           // 闲家赢
           if (!isBetOnBanker) {
-              playerFunds += betAmount * 2;
+              playerFunds += betAmount * 1;
               betHistory[betHistory.length - 1].result = 'Win';
           } else {
               playerFunds -= betAmount;
@@ -73,16 +75,35 @@ function simulateBaccarat() {
           betAmount = baseBet;
       } else if (betHistory[betHistory.length - 1].result === 'Lose') {
           // 输了翻倍下注，最大下注金额为5万
-          betAmount = Math.min(betAmount * 2, maxBet);
+          betAmount = Math.min(betAmount * doublingRate, maxBet, playerFunds);
       }
   }
 
   // 输出结果
-  console.log(`游戏结束，共进行了 ${rounds} 轮`);
-  console.log(`最终资金: ${playerFunds}`);
-  console.log('下注记录:');
-  console.table(betHistory);
+//   console.log(`游戏结束，共进行了 ${rounds} 轮`);
+//   console.log(`最终资金: ${playerFunds}`);
+//   console.log('下注记录:');
+//   console.table(betHistory);
+  return {
+    win: playerFunds>0
+  }
 }
 
 // 运行游戏
 simulateBaccarat();
+
+let allRes = {
+    win: 0,
+    lose: 0
+}
+let res = null
+// 玩一百局
+for (let i = 0; i < 10000; i++) {
+    res = simulateBaccarat()
+    if (res.win) {
+        allRes.win++
+    } else {
+        allRes.lose++
+    }
+}
+console.log(allRes);
