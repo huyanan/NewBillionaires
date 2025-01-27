@@ -8,11 +8,11 @@
  * 赢到1
  */
 function simulateBaccarat() {
-  let playerFunds = 6000;  // 初始本金
-  const targetFunds = 7000;  // 目标金额
+  let playerFunds = 1084;  // 初始本金
+  const targetFunds = 2000;  // 目标金额
   let betAmount = 20;  // 初始下注金额
   const baseBet = 20;  // 基础下注金额
-  const maxBet = 3000;  // 最大下注金额
+  const maxBet = 20;  // 最大下注金额
   // 加注倍率
   const doublingRate = 2;
   let rounds = 0;  // 游戏轮数

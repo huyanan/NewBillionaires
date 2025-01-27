@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时数据监控面板</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 250px;
+        }
+
+        .table-cell {
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .table-cell:hover {
+            background: #f8f9fa;
+        }
+
+        .table-cell.selected {
+            border: 2px solid #007bff;
+        }
+
+        .profit {
+            color: #28a745;
+        }
+
+        .loss {
+            color: #dc3545;
+        }
+
+        .controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            z-index: 100;
+        }
+
+        .summary {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            z-index: 100;
+        }
+
+        .btn {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 4px 8px;
+            margin: 2px;
+            cursor: pointer;
+        }
+
+        .input-cell {
+            width: 80px;
+            padding: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .countdown {
+            color: #666;
+            font-weight: bold;
+        }
+        
+        .next-round {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .bet-controls {
+            position: fixed;
+            left: 10px;
+            bottom: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .bet-controls button {
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+        }
+
+        .bet-controls button:hover {
+            background: #0056b3;
+        }
+
+        .selected-table {
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .bet-button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .bet-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .bet-type {
+            margin: 3px 0;
+        }
+
+        .chips-container {
+            margin: 5px 0;
+        }
+
+        .chip {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .chip:hover {
+            opacity: 0.9;
+        }
+
+        .chip-20 { background: #4CAF50; }
+        .chip-50 { background: #2196F3; }
+        .chip-100 { background: #F44336; }
+        .chip-200 { background: #9C27B0; }
+        .chip-500 { background: #FF9800; }
+        
+        .clear-bet {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .bet-amount {
+            display: flex;
+            align-items: center;
+        }
+
+        .bet-input {
+            width: 80px;
+            padding: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .dragon-length {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff4444;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .sort-controls {
+            position: fixed;
+            right: 220px;
+            top: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            z-index: 100;
+        }
+
+        .table-cell.has-bet {
+            background-color: #fff3e0;
+            border: 1px solid #ffb74d;
+        }
+
+        .bet-indicator {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: #ff9800;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .bet-controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+        }
+
+        .bet-controls:hover {
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .history-toggle {
+            position: fixed;
+            right: 10px;
+            bottom: 10px;
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 1001;
+            border: none;
+        }
+
+        .history-toggle:hover {
+            background: #0056b3;
+        }
+
+        .history-panel {
+            display: none;
+            position: fixed;
+            right: 10px;
+            bottom: 10px;
+            width: 300px;
+            max-height: 400px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .history-panel.show {
+            display: block !important;
+        }
+
+        .history-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .history-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .win { color: #28a745; }
+        .lose { color: #dc3545; }
+
+        .collapse-btn {
+            float: right;
+            padding: 2px 5px;
+            font-size: 12px;
+            color: #666;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .collapse-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .history-stats {
+            margin-top: 10px;
+            padding: 10px;
+            border-top: 1px solid #dee2e6;
+            font-size: 12px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .clear-history {
+            padding: 3px 8px;
+            font-size: 12px;
+            color: #666;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .clear-history:hover {
+            background: #f1f3f5;
+            border-color: #ced4da;
+        }
+
+        .table-history {
+            margin-top: 5px;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <div>
+            <label>单位数据量：</label>
+            <input type="number" id="bet-amount" class="input-cell" value="100">
+        </div>
+        <button class="btn" id="start">开始分析</button>
+        <button class="btn" id="stop">停止分析</button>
+        <button class="btn" id="reset">重置</button>
+    </div>
+
+    <div class="bet-controls">
+        <div class="selected-table">当前选中: <span id="selected-table-id">未选择</span></div>
+        
+        <div class="chips-container">
+            <div class="chip chip-20" data-value="20">20</div>
+            <div class="chip chip-50" data-value="50">50</div>
+            <div class="chip chip-100" data-value="100">100</div>
+            <div class="chip chip-200" data-value="200">200</div>
+            <div class="chip chip-500" data-value="500">500</div>
+        </div>
+
+        <div>投注金额:</div>
+        <div class="bet-type">
+            <label>A组: </label>
+            <div class="bet-amount">
+                <input type="number" id="bet-banker" class="bet-input" value="0" min="0" readonly>
+                <button class="clear-bet" data-target="banker">清空</button>
+            </div>
+        </div>
+        <div class="bet-type">
+            <label>B组: </label>
+            <div class="bet-amount">
+                <input type="number" id="bet-player" class="bet-input" value="0" min="0" readonly>
+                <button class="clear-bet" data-target="player">清空</button>
+            </div>
+        </div>
+        <div class="bet-type">
+            <label>C组: </label>
+            <div class="bet-amount">
+                <input type="number" id="bet-tie" class="bet-input" value="0" min="0" readonly>
+                <button class="clear-bet" data-target="tie">清空</button>
+            </div>
+        </div>
+        <button id="place-bet" class="bet-button" disabled>确认投注</button>
+    </div>
+
+    <div class="sort-controls">
+        <button id="sort-dragon" class="btn">按长龙排序</button>
+        <button id="sort-id" class="btn">按桌号排序</button>
+        <button id="sort-bet" class="btn">投注优先</button>
+    </div>
+
+    <div class="dashboard" id="dashboard"></div>
+
+    <div class="summary">
+        总资金: <span id="total-balance">20000</span>
+        <br>
+        运行时间: <span id="running-time">00:00:00</span>
+        <br>
+        总收益: <span id="total-profit">0</span>
+    </div>
+
+    <button class="history-toggle" id="history-toggle">显示记录</button>
+
+    <div class="history-panel" id="history-panel">
+        <div class="history-title">
+            投注记录
+            <div>
+                <button class="collapse-btn" id="collapse-history">收起</button>
+                <button class="clear-history" id="clear-history">清空</button>
+            </div>
+        </div>
+        <div id="history-list"></div>
+        <div class="history-stats" id="history-stats"></div>
+    </div>
+
+    <script>
+        class Table {
+            constructor(id) {
+                this.id = id;
+                this.deck = [];
+                this.results = [];
+                this.wins = 0;
+                this.losses = 0;
+                this.profit = 0;
+                this.countdown = 10;
+                this.bets = { banker: 0, player: 0, tie: 0 };
+                this.lastBets = { banker: 0, player: 0, tie: 0 };
+                this.hasBet = false;
+                this.currentDragon = { type: null, length: 0 };
+                this.roundsPlayed = 0;
+                this.maxRounds = 70;
+                this.createDeck();
+                this.shuffleDeck();
+            }
+
+            createDeck() {
+                const suits = ['♠', '♥', '♣', '♦'];
+                const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+                this.deck = [];
+                for (let suit of suits) {
+                    for (let value of values) {
+                        this.deck.push({ suit, value });
+                    }
+                }
+                this.shuffleDeck();
+                this.roundsPlayed = 0;
+            }
+
+            shuffleDeck() {
+                for (let i = this.deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
+                }
+            }
+
+            getCardValue(card) {
+                if (['J', 'Q', 'K', '10'].includes(card.value)) return 0;
+                if (card.value === 'A') return 1;
+                return parseInt(card.value);
+            }
+
+            calculatePoints(cards) {
+                return cards.reduce((sum, card) => (sum + this.getCardValue(card)) % 10, 0);
+            }
+
+            calculateProfit(result) {
+                let profit = 0;
+                const bankerBet = this.bets.banker || 0;
+                const playerBet = this.bets.player || 0;
+                const tieBet = this.bets.tie || 0;
+                const totalBet = bankerBet + playerBet + tieBet;
+
+                if (result.startsWith('tie')) {
+                    // 和局
+                    if (tieBet > 0) {
+                        profit += tieBet * 8; // 和赔8倍
+                    }
+                    // 庄闲投注返还本金
+                    profit += bankerBet + playerBet;
+                } else if (result === 'banker') {
+                    // 庄赢
+                    if (bankerBet > 0) {
+                        profit += bankerBet * 1.95; // 庄赔0.95倍加本金
+                    }
+                } else if (result === 'player') {
+                    // 闲赢
+                    if (playerBet > 0) {
+                        profit += playerBet * 2; // 闲赔1倍加本金
+                    }
+                }
+
+                // 计算净收益：赢得的钱减去总投注
+                return profit - totalBet;
+            }
+
+            updateDragon(result) {
+                if (result === 'tie') return; // 和局不影响长龙
+
+                if (this.currentDragon.type === null) {
+                    // 新的长龙开始
+                    this.currentDragon.type = result;
+                    this.currentDragon.length = 1;
+                } else if (this.currentDragon.type === result) {
+                    // 长龙继续
+                    this.currentDragon.length++;
+                } else {
+                    // 长龙断开，开始新的记录
+                    this.currentDragon.type = result;
+                    this.currentDragon.length = 1;
+                }
+            }
+
+            updateLastBets() {
+                this.lastBets = { ...this.bets };
+                this.hasBet = Object.values(this.bets).some(bet => bet > 0);
+            }
+
+            play() {
+                const playerCards = [this.deck.pop(), this.deck.pop()];
+                const bankerCards = [this.deck.pop(), this.deck.pop()];
+
+                let playerPoints = this.calculatePoints(playerCards);
+                let bankerPoints = this.calculatePoints(bankerCards);
+
+                // 补牌规则
+                if (playerPoints < 6) {
+                    playerCards.push(this.deck.pop());
+                    playerPoints = this.calculatePoints(playerCards);
+                }
+
+                if (bankerPoints < 7) {
+                    bankerCards.push(this.deck.pop());
+                    bankerPoints = this.calculatePoints(bankerCards);
+                }
+
+                // 计算结果
+                let result;
+                if (playerPoints === bankerPoints) {
+                    result = `tie ${playerPoints} vs ${bankerPoints}`;
+                } else if (playerPoints > bankerPoints) {
+                    result = 'player';
+                } else {
+                    result = 'banker';
+                }
+
+                // 更新结果记录
+                this.results.unshift(result);
+                if (this.results.length > 30) {
+                    this.results.pop();
+                }
+
+                // 更新长龙记录
+                this.updateDragon(result);
+
+                // 计算输赢
+                const roundProfit = this.calculateProfit(result);
+                this.profit += roundProfit;
+                
+                if (roundProfit > 0) this.wins++;
+                else if (roundProfit < 0) this.losses++;
+
+                // 更新上一局投注记录并清空当前投注
+                this.updateLastBets();
+                this.bets = { banker: 0, player: 0, tie: 0 };
+                this.hasBet = false;
+
+                // 更新局数
+                this.roundsPlayed++;
+                if (this.roundsPlayed >= this.maxRounds || this.deck.length < 6) {
+                    this.createDeck();
+                    this.shuffleDeck();
+                    this.roundsPlayed = 0;
+                    // 不重置收益，让它继续累计
+                }
+
+                return {
+                    result,
+                    playerPoints,
+                    bankerPoints,
+                    profit: roundProfit,
+                    dragon: this.currentDragon
+                };
+            }
+
+            updateCountdown() {
+                this.countdown--;
+                if (this.countdown <= 0) {
+                    this.countdown = 10;
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        class BetHistory {
+            constructor() {
+                this.history = [];
+                // 确保DOM加载完成后再初始化
+                setTimeout(() => {
+                    this.init();
+                }, 0);
+            }
+
+            init() {
+                // 从本地存储加载历史记录
+                const saved = localStorage.getItem('betHistory');
+                if (saved) {
+                    try {
+                        this.history = JSON.parse(saved);
+                    } catch (e) {
+                        console.error('Error loading history:', e);
+                        this.history = [];
+                    }
+                }
+
+                // 添加必要的DOM元素
+                this.addRequiredElements();
+                this.setupEventListeners();
+                this.updateDisplay();
+            }
+
+            addRequiredElements() {
+                // 检查并添加必要的DOM元素
+                if (!document.getElementById('history-toggle')) {
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.id = 'history-toggle';
+                    toggleBtn.className = 'history-toggle';
+                    toggleBtn.textContent = '显示记录';
+                    document.body.appendChild(toggleBtn);
+                }
+
+                if (!document.getElementById('history-panel')) {
+                    const panel = document.createElement('div');
+                    panel.id = 'history-panel';
+                    panel.className = 'history-panel';
+                    panel.innerHTML = `
+                        <div class="history-title">
+                            投注记录
+                            <div>
+                                <button class="collapse-btn" id="collapse-history">收起</button>
+                                <button class="clear-history" id="clear-history">清空</button>
+                            </div>
+                        </div>
+                        <div id="history-list"></div>
+                        <div id="history-stats"></div>
+                    `;
+                    document.body.appendChild(panel);
+                }
+            }
+
+            setupEventListeners() {
+                const toggleBtn = document.getElementById('history-toggle');
+                const panel = document.getElementById('history-panel');
+                const clearBtn = document.getElementById('clear-history');
+                const collapseBtn = document.getElementById('collapse-history');
+
+                if (toggleBtn && panel) {
+                    toggleBtn.onclick = () => {
+                        console.log('Toggle clicked');
+                        if (panel.classList.contains('show')) {
+                            panel.classList.remove('show');
+                            toggleBtn.textContent = '显示记录';
+                        } else {
+                            panel.classList.add('show');
+                            toggleBtn.textContent = '隐藏记录';
+                        }
+                    };
+                }
+
+                if (clearBtn) {
+                    clearBtn.onclick = () => {
+                        this.history = [];
+                        this.updateDisplay();
+                        this.saveToStorage();
+                    };
+                }
+
+                if (collapseBtn && panel && toggleBtn) {
+                    collapseBtn.onclick = () => {
+                        panel.classList.remove('show');
+                        toggleBtn.textContent = '显示记录';
+                    };
+                }
+            }
+
+            addRecord(record) {
+                console.log('Adding record:', record); // 调试日志
+                this.history.unshift(record);
+                if (this.history.length > 100) {
+                    this.history.pop();
+                }
+                this.updateDisplay();
+                this.saveToStorage();
+            }
+
+            saveToStorage() {
+                try {
+                    localStorage.setItem('betHistory', JSON.stringify(this.history));
+                } catch (e) {
+                    console.error('Error saving history:', e);
+                }
+            }
+
+            formatBets(bets) {
+                if (!bets) return '-';
+                const parts = [];
+                if (bets.banker > 0) parts.push(`A:${bets.banker}`);
+                if (bets.player > 0) parts.push(`B:${bets.player}`);
+                if (bets.tie > 0) parts.push(`C:${bets.tie}`);
+                return parts.join(' ') || '-';
+            }
+
+            updateDisplay() {
+                console.log('Updating display, history:', this.history); // 调试日志
+                const historyList = document.getElementById('history-list');
+                const historyStats = document.getElementById('history-stats');
+                
+                if (!historyList || !historyStats) {
+                    console.error('History elements not found'); // 调试日志
+                    return;
+                }
+
+                // 计算总收益
+                let totalProfit = 0;
+                let totalBets = 0;
+                let totalAmount = 0;
+                let wins = 0;
+
+                // 更新历史记录列表
+                const historyHtml = this.history.map(record => {
+                    if (!record) return '';
+
+                    // 累计统计数据
+                    const profit = Number(record.profit || 0);
+                    totalProfit += profit;
+                    totalBets++;
+                    
+                    const betAmount = record.bets ? 
+                        (record.bets.banker || 0) + 
+                        (record.bets.player || 0) + 
+                        (record.bets.tie || 0) : 0;
+                    totalAmount += betAmount;
+                    
+                    if (profit > 0) wins++;
+
+                    // 格式化显示
+                    let resultDisplay = '';
+                    let pointsDisplay = '';
+                    
+                    if (record.result && record.result.startsWith('tie')) {
+                        resultDisplay = 'C';
+                        pointsDisplay = `${record.bankerPoints} vs ${record.playerPoints}`;
+                    } else if (record.result) {
+                        resultDisplay = record.result === 'banker' ? 'A' : 'B';
+                        pointsDisplay = `${record.bankerPoints} vs ${record.playerPoints}`;
+                    }
+
+                    return `
+                        <div class="history-item">
+                            <div>[${record.time || ''}] 桌号: ${record.tableId || ''}</div>
+                            <div>投注: ${this.formatBets(record.bets)}</div>
+                            <div>结果: ${resultDisplay} (${pointsDisplay})</div>
+                            <div>收益: <span class="${profit >= 0 ? 'win' : 'lose'}">
+                                ${profit > 0 ? '+' : ''}${profit.toFixed(2)}
+                            </span></div>
+                        </div>
+                    `;
+                }).join('');
+
+                historyList.innerHTML = historyHtml;
+
+                // 更新统计数据
+                const winRate = totalBets > 0 ? ((wins / totalBets) * 100).toFixed(1) : '0.0';
+                historyStats.innerHTML = `
+                    <div>总投注次数: ${totalBets}</div>
+                    <div>总投注金额: ${totalAmount.toFixed(2)}</div>
+                    <div>总收益: <span class="${totalProfit >= 0 ? 'win' : 'lose'}">
+                        ${totalProfit > 0 ? '+' : ''}${totalProfit.toFixed(2)}
+                    </span></div>
+                    <div>胜率: ${winRate}%</div>
+                `;
+            }
+        }
+
+        class Dashboard {
+            constructor() {
+                this.tables = new Map();
+                this.totalBalance = 20000;
+                this.running = false;
+                this.startTime = null;
+                this.selectedTableId = null;
+                this.currentBetType = null;
+                this.sortType = 'id';
+                this.betHistory = new BetHistory();
+                this.lastBetStrategy = null; // 保存上一次的投注策略
+                
+                // 确保DOM加载完成后再设置事件监听
+                setTimeout(() => {
+                    this.betHistory.setupEventListeners();
+                }, 0);
+                this.setupEventListeners();
+                this.setupSortControls();
+                this.setupBetControls();
+            }
+
+            setupEventListeners() {
+                document.getElementById('start').addEventListener('click', () => this.start());
+                document.getElementById('stop').addEventListener('click', () => this.stop());
+                document.getElementById('reset').addEventListener('click', () => this.reset());
+                document.getElementById('place-bet').addEventListener('click', () => this.placeBet());
+
+                // 监听投注输入框变化
+                ['banker', 'player', 'tie'].forEach(type => {
+                    document.getElementById(`bet-${type}`).addEventListener('input', () => {
+                        this.validateBets();
+                    });
+                });
+
+                // 添加筹码点击事件
+                document.querySelectorAll('.chip').forEach(chip => {
+                    chip.addEventListener('click', (e) => {
+                        if (!this.currentBetType || !this.selectedTableId) return;
+                        
+                        const value = parseInt(e.target.dataset.value);
+                        const input = document.getElementById(`bet-${this.currentBetType}`);
+                        const currentValue = parseInt(input.value) || 0;
+                        input.value = currentValue + value;
+                        
+                        this.validateBets();
+                    });
+                });
+
+                // 添加投注框点击事件
+                ['banker', 'player', 'tie'].forEach(type => {
+                    const input = document.getElementById(`bet-${type}`);
+                    input.addEventListener('click', () => {
+                        this.currentBetType = type;
+                        // 移除其他输入框的高亮
+                        ['banker', 'player', 'tie'].forEach(t => {
+                            document.getElementById(`bet-${t}`).style.background = 'white';
+                        });
+                        // 高亮当前选中的输入框
+                        input.style.background = '#e8f0fe';
+                    });
+                });
+
+                // 添加清空按钮事件
+                document.querySelectorAll('.clear-bet').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const target = e.target.dataset.target;
+                        document.getElementById(`bet-${target}`).value = 0;
+                        this.validateBets();
+                    });
+                });
+            }
+
+            setupSortControls() {
+                document.getElementById('sort-dragon').addEventListener('click', () => {
+                    this.sortType = 'dragon';
+                    this.updateDashboard();
+                });
+
+                document.getElementById('sort-id').addEventListener('click', () => {
+                    this.sortType = 'id';
+                    this.updateDashboard();
+                });
+
+                document.getElementById('sort-bet').addEventListener('click', () => {
+                    this.sortType = 'bet';
+                    this.updateDashboard();
+                });
+            }
+
+            setupBetControls() {
+                // 添加控制按钮到DOM
+                const controlsDiv = document.createElement('div');
+                controlsDiv.className = 'bet-controls';
+                controlsDiv.innerHTML = `
+                    <button id="repeat-bet">重复上局</button>
+                    <button id="double-bet">翻倍投注</button>
+                `;
+
+                // 插入到投注按钮之前
+                const betButton = document.querySelector('button[onclick="dashboard.placeBet()"]');
+                if (betButton && betButton.parentNode) {
+                    betButton.parentNode.insertBefore(controlsDiv, betButton);
+                }
+
+                // 设置事件监听
+                document.getElementById('repeat-bet').onclick = () => this.repeatLastBet();
+                document.getElementById('double-bet').onclick = () => this.doubleBet();
+            }
+
+            validateBets() {
+                const banker = parseInt(document.getElementById('bet-banker').value) || 0;
+                const player = parseInt(document.getElementById('bet-player').value) || 0;
+                const tie = parseInt(document.getElementById('bet-tie').value) || 0;
+                const total = banker + player + tie;
+
+                const placeBetBtn = document.getElementById('place-bet');
+                placeBetBtn.disabled = total === 0 || total > this.totalBalance || !this.selectedTableId;
+
+                // 同时更新翻倍按钮状态
+                const doubleButton = document.getElementById('double-bet');
+                if (doubleButton) {
+                    doubleButton.disabled = total * 2 > this.totalBalance;
+                }
+            }
+
+            selectTable(id) {
+                this.selectedTableId = id;
+                document.getElementById('selected-table-id').textContent = `桌号 ${id}`;
+                
+                // 更新所有桌子的选中状态
+                document.querySelectorAll('.table-cell').forEach(cell => {
+                    cell.classList.remove('selected');
+                });
+                
+                // 高亮选中的桌子
+                const selectedCell = document.querySelector(`[data-table-id="${id}"]`);
+                if (selectedCell) {
+                    selectedCell.classList.add('selected');
+                }
+
+                // 清空所有投注
+                ['banker', 'player', 'tie'].forEach(type => {
+                    document.getElementById(`bet-${type}`).value = 0;
+                });
+                
+                this.validateBets();
+            }
+
+            placeBet() {
+                if (!this.selectedTableId) return;
+
+                const table = this.tables.get(this.selectedTableId);
+                if (!table) return;
+
+                const bets = {
+                    banker: parseInt(document.getElementById('bet-banker').value) || 0,
+                    player: parseInt(document.getElementById('bet-player').value) || 0,
+                    tie: parseInt(document.getElementById('bet-tie').value) || 0
+                };
+
+                const totalBet = bets.banker + bets.player + bets.tie;
+                if (totalBet > this.totalBalance) {
+                    alert('余额不足');
+                    return;
+                }
+
+                // 保存当前投注策略
+                this.lastBetStrategy = { ...bets };
+
+                // 更新投注
+                table.bets = bets;
+                table.hasBet = true;
+
+                // 清空投注框
+                document.getElementById('bet-banker').value = 0;
+                document.getElementById('bet-player').value = 0;
+                document.getElementById('bet-tie').value = 0;
+
+                this.validateBets();
+                this.updateDashboard();
+                this.updateSummary();
+            }
+
+            createTables() {
+                for (let i = 1; i <= 500; i++) {
+                    this.tables.set(i, new Table(i));
+                }
+            }
+
+            start() {
+                if (!this.running) {
+                    this.running = true;
+                    this.startTime = new Date();
+                    this.createTables();
+                    this.run();
+                }
+            }
+
+            stop() {
+                this.running = false;
+            }
+
+            reset() {
+                this.stop();
+                this.tables.clear();
+                this.totalBalance = 20000;
+                this.startTime = null;
+                this.selectedTableId = null;
+                this.updateDashboard();
+                this.updateSummary();
+            }
+
+            run() {
+                if (!this.running) return;
+
+                this.tables.forEach(table => {
+                    if (table.updateCountdown()) {
+                        const result = table.play();
+                        if (Object.values(table.lastBets).some(bet => bet > 0)) {
+                            try {
+                                const record = {
+                                    tableId: table.id,
+                                    bets: { ...table.lastBets },
+                                    result: result.result,
+                                    bankerPoints: result.bankerPoints,
+                                    playerPoints: result.playerPoints,
+                                    profit: result.profit,
+                                    time: new Date().toLocaleTimeString()
+                                };
+                                this.betHistory.addRecord(record);
+                                this.totalBalance += result.profit; // 直接使用计算好的净收益
+                            } catch (error) {
+                                console.error('Error adding record:', error);
+                            }
+                        }
+                    }
+                });
+
+                this.updateDashboard();
+                this.updateSummary();
+
+                setTimeout(() => this.run(), 1000);
+            }
+
+            getSortedTables() {
+                const tables = Array.from(this.tables.values());
+                
+                switch(this.sortType) {
+                    case 'dragon':
+                        return tables.sort((a, b) => {
+                            // 首先按是否有投注排序
+                            if (a.hasBet !== b.hasBet) return b.hasBet ? 1 : -1;
+                            // 然后按长龙长度排序
+                            const lengthDiff = b.currentDragon.length - a.currentDragon.length;
+                            if (lengthDiff !== 0) return lengthDiff;
+                            return a.id - b.id;
+                        });
+                    
+                    case 'bet':
+                        return tables.sort((a, b) => {
+                            // 当前有投注的排最前
+                            if (a.hasBet !== b.hasBet) return b.hasBet ? 1 : -1;
+                            // 其次是上局有投注的
+                            const aLastBet = Object.values(a.lastBets).some(bet => bet > 0);
+                            const bLastBet = Object.values(b.lastBets).some(bet => bet > 0);
+                            if (aLastBet !== bLastBet) return bLastBet ? 1 : -1;
+                            // 最后按桌号排序
+                            return a.id - b.id;
+                        });
+                    
+                    default: // 'id'
+                        return tables.sort((a, b) => {
+                            // 当前有投注的排最前
+                            if (a.hasBet !== b.hasBet) return b.hasBet ? 1 : -1;
+                            // 其次是上局有投注的
+                            const aLastBet = Object.values(a.lastBets).some(bet => bet > 0);
+                            const bLastBet = Object.values(b.lastBets).some(bet => bet > 0);
+                            if (aLastBet !== bLastBet) return bLastBet ? 1 : -1;
+                            // 最后按桌号排序
+                            return a.id - b.id;
+                        });
+                }
+            }
+
+            updateDashboard() {
+                const dashboard = document.getElementById('dashboard');
+                dashboard.innerHTML = '';
+
+                const sortedTables = this.getSortedTables();
+                
+                sortedTables.forEach(table => {
+                    const cell = document.createElement('div');
+                    cell.className = 'table-cell';
+                    if (table.id === this.selectedTableId) {
+                        cell.classList.add('selected');
+                    }
+                    if (table.hasBet || Object.values(table.lastBets).some(bet => bet > 0)) {
+                        cell.classList.add('has-bet');
+                    }
+                    cell.setAttribute('data-table-id', table.id);
+
+                    const betIndicator = table.hasBet ? 
+                        '<div class="bet-indicator">已投注</div>' : 
+                        (Object.values(table.lastBets).some(bet => bet > 0) ? 
+                            '<div class="bet-indicator">上局</div>' : '');
+
+                    const dragonHtml = table.currentDragon.length > 2 ? 
+                        `<div class="dragon-length">
+                            ${table.currentDragon.type === 'banker' ? 'A' : 'B'}${table.currentDragon.length}
+                        </div>` : '';
+
+                    cell.innerHTML = `
+                        ${betIndicator}
+                        ${dragonHtml}
+                        桌号: ${table.id}
+                        <span class="next-round">下轮: <span class="countdown">${table.countdown}s</span></span><br>
+                        胜: ${table.wins} 负: ${table.losses}<br>
+                        收益: <span class="${table.profit >= 0 ? 'profit' : 'loss'}">${table.profit.toFixed(2)}</span><br>
+                        局数: ${table.roundsPlayed}/${table.maxRounds}<br>
+                        走势: ${table.results.map(r => r === 'player' ? 'B' : r === 'banker' ? 'A' : 'C').join(' ')}<br>
+                        当前投注: ${table.bets.banker > 0 ? 'A:'+table.bets.banker : ''} 
+                        ${table.bets.player > 0 ? 'B:'+table.bets.player : ''} 
+                        ${table.bets.tie > 0 ? 'C:'+table.bets.tie : ''}
+                        ${Object.values(table.lastBets).some(bet => bet > 0) ? '<br>上局投注: ' + 
+                            [
+                                table.lastBets.banker > 0 ? 'A:'+table.lastBets.banker : '',
+                                table.lastBets.player > 0 ? 'B:'+table.lastBets.player : '',
+                                table.lastBets.tie > 0 ? 'C:'+table.lastBets.tie : ''
+                            ].filter(Boolean).join(' ') : ''}
+                    `;
+                    
+                    cell.addEventListener('click', () => this.selectTable(table.id));
+                    dashboard.appendChild(cell);
+                });
+            }
+
+            updateSummary() {
+                document.getElementById('total-balance').textContent = this.totalBalance.toFixed(2);
+                document.getElementById('total-profit').textContent = 
+                    (this.totalBalance - 20000).toFixed(2);
+                
+                if (this.startTime) {
+                    const elapsed = new Date() - this.startTime;
+                    const hours = Math.floor(elapsed / 3600000);
+                    const minutes = Math.floor((elapsed % 3600000) / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    document.getElementById('running-time').textContent = 
+                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }
+
+            repeatLastBet() {
+                if (!this.lastBetStrategy) {
+                    alert('没有上一局投注记录');
+                    return;
+                }
+
+                // 填充投注框
+                document.getElementById('bet-banker').value = this.lastBetStrategy.banker;
+                document.getElementById('bet-player').value = this.lastBetStrategy.player;
+                document.getElementById('bet-tie').value = this.lastBetStrategy.tie;
+
+                this.validateBets();
+            }
+
+            doubleBet() {
+                // 获取当前投注值
+                const bankerInput = document.getElementById('bet-banker');
+                const playerInput = document.getElementById('bet-player');
+                const tieInput = document.getElementById('bet-tie');
+
+                // 翻倍当前值
+                bankerInput.value = (parseInt(bankerInput.value) || 0) * 2;
+                playerInput.value = (parseInt(playerInput.value) || 0) * 2;
+                tieInput.value = (parseInt(tieInput.value) || 0) * 2;
+
+                this.validateBets();
+            }
+        }
+
+        const dashboard = new Dashboard();
+    </script>
+</body>
+</html> 
