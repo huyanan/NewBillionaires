@@ -7,12 +7,12 @@
  * 玩家初始下注金额20，随机压庄或闲，不压和，输了翻倍压，最高一把压5w，赢了还从20开始压，本金10w，一直玩，直到本金归零或者达到100w为止，记录下每次下注的金额，以及每次输赢的金额，最后输出结果
  * 赢到1
  */
-function simulateBaccarat() {
-  let playerFunds = 1084;  // 初始本金
-  const targetFunds = 2000;  // 目标金额
-  let betAmount = 20;  // 初始下注金额
-  const baseBet = 20;  // 基础下注金额
-  const maxBet = 20;  // 最大下注金额
+function simulateBaccarat(playerFunds=20000, targetFunds=30000, betAmount=20) {
+//   let playerFunds = balance || 20000;  // 初始本金
+//   const targetFunds = targetFunds || 30000;  // 目标金额
+//   let betAmount = betAmount || 20;  // 初始下注金额
+  const baseBet = betAmount;  // 基础下注金额
+  const maxBet = 50000;  // 最大下注金额
   // 加注倍率
   const doublingRate = 2;
   let rounds = 0;  // 游戏轮数
@@ -90,20 +90,46 @@ function simulateBaccarat() {
 }
 
 // 运行游戏
-simulateBaccarat();
+// simulateBaccarat();
 
-let allRes = {
-    win: 0,
-    lose: 0
-}
-let res = null
-// 玩一百局
-for (let i = 0; i < 10000; i++) {
-    res = simulateBaccarat()
-    if (res.win) {
-        allRes.win++
-    } else {
-        allRes.lose++
+// let allRes = {
+//     win: 0,
+//     lose: 0
+// }
+// let res = null
+// // 玩一百局
+// for (let i = 0; i < 1000; i++) {
+//     res = simulateBaccarat()
+//     if (res.win) {
+//         allRes.win++
+//     } else {
+//         allRes.lose++
+//     }
+// }
+// console.log(allRes);
+
+
+let res = [];
+let bet = 20;
+let balance = 20000;
+let targetFunds = 30000;
+for (bet; bet < balance; bet+=100) {
+    let allRes = {
+        win: 0,
+        lose: 0
     }
+    for (let i = 0; i < 1000; i++) {
+        if (simulateBaccarat(balance, targetFunds, bet).win) {
+            allRes.win++
+        } else {
+            allRes.lose++
+        }
+    }
+    let resItem = {
+        bet: bet,
+        allRes: allRes
+    }
+    // console.log(resItem)
+    res.push(resItem)
 }
-console.log(allRes);
+console.log(JSON.stringify(res));
