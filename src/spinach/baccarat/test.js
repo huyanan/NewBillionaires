@@ -1,4 +1,4 @@
-import Game from './Game'
+const Game = require('./Game')
 
 const game = new Game({
   // playerWinRate: 0.4586,
@@ -7,3 +7,9 @@ const game = new Game({
   tableNum: 1,
   playerNum: 1,
 })
+
+game.start();
+setTimeout(() => {
+  game.stop();
+  game.log();
+}, 6000);

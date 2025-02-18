@@ -5,8 +5,8 @@ class Player {
     this.balance = options.balance
 
   }
-  start () {
-    // this
+  run () {
+    // 玩家开始游戏
   }
 }
 
@@ -31,3 +31,5 @@ class Player {
 
  */ 
 
+
+module.exports = Player
